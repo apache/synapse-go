@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<sequence name="inboundSeq" trace="disable" xmlns="http://ws.apache.org/ns/synapse">
-    <log category="INFO">
-        <message>message from inbound</message>
-    </log>
-</sequence>

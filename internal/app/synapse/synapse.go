@@ -25,6 +25,7 @@ import (
 	"github.com/apache/synapse-go/internal/app/adapters/mediation"
 	"github.com/apache/synapse-go/internal/pkg/core/artifacts"
 	"github.com/apache/synapse-go/internal/pkg/core/deployers"
+	"github.com/apache/synapse-go/internal/pkg/core/utils"
 )
 
 func Run(ctx context.Context) error {
@@ -34,7 +35,7 @@ func Run(ctx context.Context) error {
 
 	var wg sync.WaitGroup
 	ctx, cancel := context.WithCancel(ctx)
-	ctx = context.WithValue(ctx, "waitGroup", &wg)
+	ctx = context.WithValue(ctx, utils.WaitGroupKey, &wg)
 
 	// TODO: Load configuration
 	// TODO: Create loggers and add to context
@@ -42,8 +43,13 @@ func Run(ctx context.Context) error {
 	defer cancel()
 
 	// create instace variables
+
+	// Adding config context to the GO context
 	conCtx := artifacts.GetConfigContext()
-	MediationEngine := mediation.NewMediationEngine(conCtx)
+
+	ctx = context.WithValue(ctx, utils.ConfigContextKey, conCtx)
+
+	mediationEngine := mediation.NewMediationEngine()
 
 	exePath, err := os.Executable()
 	if err != nil {
@@ -52,7 +58,7 @@ func Run(ctx context.Context) error {
 	binDir := filepath.Dir(exePath)
 
 	artifactsPath := filepath.Join(binDir, "..", "artifacts")
-	deployer := deployers.NewDeployer(conCtx, artifactsPath, MediationEngine)
+	deployer := deployers.NewDeployer(artifactsPath, mediationEngine)
 	err = deployer.Deploy(ctx)
 	if err != nil {
 		fmt.Println("Error deploying artifacts: ", err)

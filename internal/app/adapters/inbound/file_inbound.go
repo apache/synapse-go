@@ -24,6 +24,7 @@ import (
 	"github.com/apache/synapse-go/internal/app/core/domain"
 	"github.com/apache/synapse-go/internal/app/core/ports"
 	"github.com/apache/synapse-go/internal/pkg/core/synctx"
+	"github.com/apache/synapse-go/internal/pkg/core/utils"
 )
 
 type FileInboundEndpoint struct {
@@ -31,9 +32,9 @@ type FileInboundEndpoint struct {
 	IsRunning bool
 }
 
-func (inbound FileInboundEndpoint) Start(ctx context.Context, mediator ports.InboundMessageMediator) error {
+func (inbound *FileInboundEndpoint) Start(ctx context.Context, mediator ports.InboundMessageMediator) error {
 	inbound.IsRunning = true
-	waitgroup := ctx.Value("waitGroup").(*sync.WaitGroup)
+	waitgroup := ctx.Value(utils.WaitGroupKey).(*sync.WaitGroup)
 	if inbound.Config.Protocol == "file" {
 		var fileContent = "Hello World"
 		interval, found := inbound.getIntervalParameterValue()
@@ -75,7 +76,8 @@ func (inbound FileInboundEndpoint) Start(ctx context.Context, mediator ports.Inb
 	}
 }
 
-func (adapter FileInboundEndpoint) Stop() error {
+// call this using a channel
+func (adapter *FileInboundEndpoint) Stop() error {
 	adapter.IsRunning = false
 	return nil
 }

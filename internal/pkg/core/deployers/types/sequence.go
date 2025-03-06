@@ -11,7 +11,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package pogo
+package types
 
 import (
 	"encoding/xml"
@@ -24,6 +24,7 @@ type Sequence struct {
 	MediatorList []artifacts.Mediator
 }
 
+// unmarshal decodes the XML data and populates the Sequence struct
 func (seq *Sequence) unmarshal(decoder *xml.Decoder, position artifacts.Position) (artifacts.Sequence, error) {
 	var mediatorList []artifacts.Mediator
 	if position.Hierarchy == "" {

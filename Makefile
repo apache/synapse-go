@@ -10,7 +10,7 @@ ZIP_NAME := synapse.zip
 # Add any Go build flags or linker flags (LDFLAGS) here
 LDFLAGS := "-s -w"
 
-.PHONY: all deps build package clean
+.PHONY: all deps build package clean test
 
 ## Default target: build + package
 all: deps build package

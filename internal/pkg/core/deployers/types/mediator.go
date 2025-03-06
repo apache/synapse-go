@@ -11,28 +11,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package services
+package types
 
 import (
-	"context"
+	"encoding/xml"
 
-	"github.com/apache/synapse-go/internal/app/core/ports"
+	"github.com/apache/synapse-go/internal/pkg/core/artifacts"
 )
 
-type InboundService struct {
-	inbound ports.InboundEndpoint
-}
-
-func NewInboundService(inbound ports.InboundEndpoint) *InboundService {
-	return &InboundService{
-		inbound: inbound,
-	}
-}
-
-func (s *InboundService) Start(ctx context.Context, mediator ports.InboundMessageMediator) error {
-	return s.inbound.Start(ctx, mediator)
-}
-
-func (s *InboundService) Stop() error {
-	return s.inbound.Stop()
+type Mediator interface {
+	Unmarshal(d *xml.Decoder, start xml.StartElement, position artifacts.Position) (artifacts.Mediator, error)
 }

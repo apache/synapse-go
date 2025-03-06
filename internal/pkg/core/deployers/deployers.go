@@ -25,11 +25,11 @@ import (
 	"github.com/apache/synapse-go/internal/app/core/domain"
 	"github.com/apache/synapse-go/internal/app/core/ports"
 	"github.com/apache/synapse-go/internal/pkg/core/artifacts"
-	"github.com/apache/synapse-go/internal/pkg/core/deployers/pogo"
+	"github.com/apache/synapse-go/internal/pkg/core/deployers/types"
+	"github.com/apache/synapse-go/internal/pkg/core/utils"
 )
 
 type Deployer struct {
-	ctx             *artifacts.ConfigContext
 	inboundMediator ports.InboundMessageMediator
 	basePath        string
 }
@@ -43,8 +43,8 @@ type Deployer struct {
 //    |─ Sequences/
 //    └─ Inbounds/
 
-func NewDeployer(ctx *artifacts.ConfigContext, basePath string, inboundMediator ports.InboundMessageMediator) *Deployer {
-	return &Deployer{ctx: ctx, basePath: basePath, inboundMediator: inboundMediator}
+func NewDeployer(basePath string, inboundMediator ports.InboundMessageMediator) *Deployer {
+	return &Deployer{basePath: basePath, inboundMediator: inboundMediator}
 }
 
 func (d *Deployer) Deploy(ctx context.Context) error {
@@ -90,37 +90,40 @@ func (d *Deployer) Deploy(ctx context.Context) error {
 
 func (d *Deployer) DeploySequences(ctx context.Context, fileName string, xmlData string) {
 	position := artifacts.Position{FileName: fileName}
-	sequence := pogo.Sequence{}
+	sequence := types.Sequence{}
 	newSeq, err := sequence.Unmarshal(xmlData, position)
 	if err != nil {
 		fmt.Println("Error unmarshalling sequence:", err)
 		return
 	}
-	d.ctx.AddSequence(newSeq)
+	configContext := ctx.Value(utils.ConfigContextKey).(*artifacts.ConfigContext)
+	configContext.AddSequence(newSeq)
 	fmt.Println("Deployed sequence: ", newSeq.Name)
 }
 
 func (d *Deployer) DeployAPIs(ctx context.Context, fileName string, xmlData string) {
 	position := artifacts.Position{FileName: fileName}
-	api := pogo.API{}
+	api := types.API{}
 	newApi, err := api.Unmarshal(xmlData, position)
 	if err != nil {
 		fmt.Println("Error unmarshalling sequence:", err)
 		return
 	}
-	d.ctx.AddAPI(newApi)
+	configContext := ctx.Value(utils.ConfigContextKey).(*artifacts.ConfigContext)
+	configContext.AddAPI(newApi)
 	fmt.Println("Deployed API: ", newApi.Name)
 }
 
 func (d *Deployer) DeployInbounds(ctx context.Context, fileName string, xmlData string) {
 	position := artifacts.Position{FileName: fileName}
-	inboundEp := pogo.Inbound{}
+	inboundEp := types.Inbound{}
 	newInbound, err := inboundEp.Unmarshal(xmlData, position)
 	if err != nil {
 		fmt.Println("Error unmarshalling sequence:", err)
 		return
 	}
-	d.ctx.AddInbound(newInbound)
+	configContext := ctx.Value(utils.ConfigContextKey).(*artifacts.ConfigContext)
+	configContext.AddInbound(newInbound)
 	fmt.Println("Deployed inbound: ", newInbound.Name)
 
 	// Start the inbound endpoint
@@ -138,7 +141,7 @@ func (d *Deployer) DeployInbounds(ctx context.Context, fileName string, xmlData 
 		fmt.Println("Error creating inbound endpoint:", eerr)
 		return
 	}
-	wg := ctx.Value("waitGroup").(*sync.WaitGroup)
+	wg := ctx.Value(utils.WaitGroupKey).(*sync.WaitGroup)
 	wg.Add(1)
 	go func() {
 		err = inboundEndpoint.Start(ctx, d.inboundMediator)

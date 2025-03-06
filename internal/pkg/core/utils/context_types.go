@@ -11,14 +11,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package pogo
+package utils
 
-import (
-	"encoding/xml"
+type ContextKey string
+type WGKey string
 
-	"github.com/apache/synapse-go/internal/pkg/core/artifacts"
-)
-
-type Mediator interface {
-	Unmarshal(d *xml.Decoder, start xml.StartElement, position artifacts.Position) (artifacts.Mediator, error)
-}
+const ConfigContextKey ContextKey = "configContext"
+const WaitGroupKey WGKey = "waitGroup"

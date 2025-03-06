@@ -20,20 +20,19 @@ import (
 
 	"github.com/apache/synapse-go/internal/pkg/core/artifacts"
 	"github.com/apache/synapse-go/internal/pkg/core/synctx"
+	"github.com/apache/synapse-go/internal/pkg/core/utils"
 )
 
 type MediationEngine struct {
-	ConfigContext *artifacts.ConfigContext
 }
 
-func NewMediationEngine(configContext *artifacts.ConfigContext) *MediationEngine {
-	return &MediationEngine{
-		ConfigContext: configContext,
-	}
+func NewMediationEngine() *MediationEngine {
+	return &MediationEngine{}
 }
 
 func (m *MediationEngine) MediateInboundMessage(ctx context.Context, seqName string, msg *synctx.MsgContext) error {
-	waitgroup := ctx.Value("waitGroup").(*sync.WaitGroup)
+	waitgroup := ctx.Value(utils.WaitGroupKey).(*sync.WaitGroup)
+	configContext := ctx.Value(utils.ConfigContextKey).(*artifacts.ConfigContext)
 	waitgroup.Add(1)
 	go func() {
 		defer waitgroup.Done()
@@ -43,7 +42,7 @@ func (m *MediationEngine) MediateInboundMessage(ctx context.Context, seqName str
 			waitgroup.Done()
 			return
 		default:
-			sequence, exists := m.ConfigContext.SequenceMap[seqName]
+			sequence, exists := configContext.SequenceMap[seqName]
 			if !exists {
 				fmt.Println("Sequence " + seqName + " not found")
 				return

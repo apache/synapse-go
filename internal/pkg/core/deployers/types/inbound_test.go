@@ -12,7 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package pogo
+package types
 
 import (
 	"testing"
@@ -61,5 +61,39 @@ func TestUnmarshal(t *testing.T) {
 	}
 	if result.Position.Hierarchy != "testHierarchy" {
 		t.Errorf("Expected Hierarchy to be 'testHierarchy', got %s", result.Position.Hierarchy)
+	}
+}
+
+func TestUnmarshalEmptyParameters(t *testing.T) {
+	xmlData := `<inbound name="testInbound" sequence="testSequence" protocol="testProtocol" suspend="testSuspend" onError="testOnError">
+					<parameters>
+					</parameters>
+				</inbound>`
+	position := artifacts.Position{Hierarchy: "testHierarchy"}
+
+	inbound := &Inbound{}
+	result, err := inbound.Unmarshal(xmlData, position)
+	if err != nil {
+		t.Fatalf("Expected no error, got %v", err)
+	}
+
+	if len(result.Parameters) != 0 {
+		t.Errorf("Expected 0 parameters, got %d", len(result.Parameters))
+	}
+}
+
+func TestUnmarshalNoParameters(t *testing.T) {
+	xmlData := `<inbound name="testInbound" sequence="testSequence" protocol="testProtocol" suspend="testSuspend" onError="testOnError">
+				</inbound>`
+	position := artifacts.Position{Hierarchy: "testHierarchy"}
+
+	inbound := &Inbound{}
+	result, err := inbound.Unmarshal(xmlData, position)
+	if err != nil {
+		t.Fatalf("Expected no error, got %v", err)
+	}
+
+	if len(result.Parameters) != 0 {
+		t.Errorf("Expected 0 parameters, got %d", len(result.Parameters))
 	}
 }

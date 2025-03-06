@@ -27,7 +27,7 @@ var (
 func NewInbound(config domain.InboundConfig) (ports.InboundEndpoint, error) {
 	switch config.Protocol {
 	case "file":
-		return FileInboundEndpoint{
+		return &FileInboundEndpoint{
 			Config:    config,
 			IsRunning: false,
 		}, nil

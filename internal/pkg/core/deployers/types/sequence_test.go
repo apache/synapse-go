@@ -1,4 +1,4 @@
-package pogo
+package types
 
 import (
 	"encoding/xml"
