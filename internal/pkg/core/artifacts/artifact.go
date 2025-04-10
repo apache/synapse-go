@@ -19,16 +19,14 @@
 
 package artifacts
 
-import "sync"
+import (
+	"sync"
 
-// ArtifactPosition locates the exact position of any deployed artifact
-// This is uesd to log the exact position of artifacts in error handling
-// hierarchy ex: API -> Resource -> InSequence -> Log
-type Position struct {
-	LineNo    int
-	FileName  string
-	Hierarchy string
-}
+	"github.com/apache/synapse-go/internal/pkg/core/common"
+)
+
+// Use the Position from common package
+type Position = common.Position
 
 // Break the cyclic dependency between artifacts and configuration context
 type EndpointProvider interface {
@@ -36,10 +34,12 @@ type EndpointProvider interface {
 }
 
 type ConfigContext struct {
-	ApiMap      map[string]API
-	EndpointMap map[string]Endpoint
-	SequenceMap map[string]Sequence
-	InboundMap  map[string]Inbound
+	ApiMap       map[string]API
+	EndpointMap  map[string]Endpoint
+	SequenceMap  map[string]Sequence
+	InboundMap   map[string]Inbound
+	LoggerConfig common.ConfigProvider
+	//ServerConfig common.ConfigProvider
 }
 
 func (c *ConfigContext) AddAPI(api API) {
@@ -56,6 +56,10 @@ func (c *ConfigContext) AddSequence(sequence Sequence) {
 
 func (c *ConfigContext) AddInbound(inbound Inbound) {
 	c.InboundMap[inbound.Name] = inbound
+}
+
+func (c *ConfigContext) AddLoggerConfig(cfg common.ConfigProvider) {
+	c.LoggerConfig = cfg
 }
 
 func (c *ConfigContext) GetEndpoint(epName string) Endpoint {
