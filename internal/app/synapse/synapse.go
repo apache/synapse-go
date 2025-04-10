@@ -22,6 +22,7 @@ package synapse
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"sync"
@@ -29,6 +30,7 @@ import (
 	"time"
 
 	"github.com/apache/synapse-go/internal/app/adapters/mediation"
+	"github.com/apache/synapse-go/internal/pkg/config"
 	"github.com/apache/synapse-go/internal/pkg/core/artifacts"
 	"github.com/apache/synapse-go/internal/pkg/core/deployers"
 	"github.com/apache/synapse-go/internal/pkg/core/utils"
@@ -42,36 +44,37 @@ func Run(ctx context.Context) error {
 	var wg sync.WaitGroup
 	ctx, cancel := context.WithCancel(ctx)
 	ctx = context.WithValue(ctx, utils.WaitGroupKey, &wg)
-
-	// TODO: Load configuration
-	// TODO: Create loggers and add to context
-
 	defer cancel()
 
 	// create instace variables
 
 	// Adding config context to the GO context
 	conCtx := artifacts.GetConfigContext()
-
 	ctx = context.WithValue(ctx, utils.ConfigContextKey, conCtx)
-
-	mediationEngine := mediation.NewMediationEngine()
 
 	exePath, err := os.Executable()
 	if err != nil {
-		fmt.Println("Error getting executable path: ", err)
+		log.Fatalf("Error getting executable path: %s", err.Error())
 	}
-	binDir := filepath.Dir(exePath)
 
+	binDir := filepath.Dir(exePath)
+	confPath := filepath.Join(binDir, "..", "conf")
+
+	errConfig := config.InitializeConfig(ctx, confPath)
+	if errConfig != nil {
+		log.Fatalf("Initialization error: %s", errConfig.Error())
+	}
+
+	mediationEngine := mediation.NewMediationEngine()
 	artifactsPath := filepath.Join(binDir, "..", "artifacts")
 	deployer := deployers.NewDeployer(artifactsPath, mediationEngine)
 	err = deployer.Deploy(ctx)
 	if err != nil {
-		fmt.Println("Error deploying artifacts: ", err)
+		log.Printf("Error deploying artifacts: %v", err)
 	}
 
 	elapsed := time.Since(start)
-	fmt.Println("Server started in : ", elapsed)
+	log.Printf("Server started in: %v", elapsed)
 
 	<-ctx.Done()
 	wg.Wait()

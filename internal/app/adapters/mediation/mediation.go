@@ -21,19 +21,32 @@ package mediation
 
 import (
 	"context"
-	"fmt"
+	"log/slog"
 	"sync"
+	
 
 	"github.com/apache/synapse-go/internal/pkg/core/artifacts"
 	"github.com/apache/synapse-go/internal/pkg/core/synctx"
 	"github.com/apache/synapse-go/internal/pkg/core/utils"
+	"github.com/apache/synapse-go/internal/pkg/loggerfactory"
+)
+
+const (
+	componentName = "mediation"
 )
 
 type MediationEngine struct {
+	logger *slog.Logger
 }
 
 func NewMediationEngine() *MediationEngine {
-	return &MediationEngine{}
+	m := &MediationEngine{}
+	m.logger = loggerfactory.GetLogger(componentName, m)
+	return m
+}
+
+func (m *MediationEngine) UpdateLogger() {
+	m.logger = loggerfactory.GetLogger(componentName, m)
 }
 
 func (m *MediationEngine) MediateInboundMessage(ctx context.Context, seqName string, msg *synctx.MsgContext) error {
@@ -44,13 +57,13 @@ func (m *MediationEngine) MediateInboundMessage(ctx context.Context, seqName str
 		defer waitgroup.Done()
 		select {
 		case <-ctx.Done():
-			fmt.Println("Mediation of sequence stopped since context is done")
+			m.logger.Info("Mediation of sequence stopped since context is done")
 			waitgroup.Done()
 			return
 		default:
 			sequence, exists := configContext.SequenceMap[seqName]
 			if !exists {
-				fmt.Println("Sequence " + seqName + " not found")
+				m.logger.Error("Sequence " + seqName + " not found")
 				return
 			}
 			sequence.Execute(msg)
