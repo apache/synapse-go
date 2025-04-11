@@ -20,7 +20,7 @@
 package synctx
 
 type MsgContext struct {
-	Properties map[string]string
+	Properties map[string]interface{}
 	Message    Message
 	Headers    map[string]string
 }
@@ -32,7 +32,7 @@ type Message struct {
 
 func CreateMsgContext() *MsgContext {
 	return &MsgContext{
-		Properties: make(map[string]string),
+		Properties: make(map[string]interface{}),
 		Message:    Message{},
 		Headers:    make(map[string]string),
 	}

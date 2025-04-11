@@ -10,7 +10,7 @@ require (
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
-	golang.org/x/sys v0.21.0 // indirect
+	golang.org/x/sys v0.31.0 // indirect
 )
 
 require (
@@ -90,7 +90,6 @@ require (
 	golang.org/x/net v0.37.0 // indirect
 	golang.org/x/oauth2 v0.28.0 // indirect
 	golang.org/x/sync v0.12.0 // indirect
-	golang.org/x/sys v0.31.0 // indirect
 	golang.org/x/time v0.11.0 // indirect
 	google.golang.org/api v0.227.0 // indirect
 	google.golang.org/genproto v0.0.0-20250313205543-e70fdf4c4cb4 // indirect
@@ -102,7 +101,6 @@ require (
 
 require (
 	github.com/c2fo/vfs/v7 v7.1.0
-	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/jlaffaye/ftp v0.2.1-0.20240214224549-4edb16bfcd0f // indirect
 	github.com/pkg/sftp v1.13.8 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
