@@ -1,0 +1,10 @@
+[logger]
+level.default = "warn"
+
+[logger.level.packages]
+mediation = "error"
+deployers = "error"
+
+[logger.handler]
+format = "json"
+outputPath = "stdout"

@@ -21,8 +21,8 @@ package deployers
 
 import (
 	"context"
-	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"sync"
@@ -33,11 +33,18 @@ import (
 	"github.com/apache/synapse-go/internal/pkg/core/artifacts"
 	"github.com/apache/synapse-go/internal/pkg/core/deployers/types"
 	"github.com/apache/synapse-go/internal/pkg/core/utils"
+	"github.com/apache/synapse-go/internal/pkg/loggerfactory"
 )
+
+const (
+	componentName = "deployers"
+)
+
 
 type Deployer struct {
 	inboundMediator ports.InboundMessageMediator
 	basePath        string
+	logger 			*slog.Logger
 }
 
 // Synapse/
@@ -50,7 +57,13 @@ type Deployer struct {
 //    └─ Inbounds/
 
 func NewDeployer(basePath string, inboundMediator ports.InboundMessageMediator) *Deployer {
-	return &Deployer{basePath: basePath, inboundMediator: inboundMediator}
+	d := &Deployer{basePath: basePath, inboundMediator: inboundMediator}
+	d.logger = loggerfactory.GetLogger(componentName, d)
+	return d
+}
+
+func (d *Deployer) UpdateLogger() {
+	d.logger = loggerfactory.GetLogger(componentName,d)
 }
 
 func (d *Deployer) Deploy(ctx context.Context) error {
@@ -78,7 +91,7 @@ func (d *Deployer) Deploy(ctx context.Context) error {
 			defer xmlFile.Close()
 			data, err := io.ReadAll(xmlFile)
 			if err != nil {
-				fmt.Println("Error reading file:", err)
+				d.logger.Error("Error reading file:", "error", err)
 				continue
 			}
 			switch artifactType {
@@ -99,12 +112,12 @@ func (d *Deployer) DeploySequences(ctx context.Context, fileName string, xmlData
 	sequence := types.Sequence{}
 	newSeq, err := sequence.Unmarshal(xmlData, position)
 	if err != nil {
-		fmt.Println("Error unmarshalling sequence:", err)
+		d.logger.Error("Error unmarshalling sequence:", "error", err)
 		return
 	}
 	configContext := ctx.Value(utils.ConfigContextKey).(*artifacts.ConfigContext)
 	configContext.AddSequence(newSeq)
-	fmt.Println("Deployed sequence: ", newSeq.Name)
+	d.logger.Info("Deployed sequence: " + newSeq.Name)
 }
 
 func (d *Deployer) DeployAPIs(ctx context.Context, fileName string, xmlData string) {
@@ -112,12 +125,12 @@ func (d *Deployer) DeployAPIs(ctx context.Context, fileName string, xmlData stri
 	api := types.API{}
 	newApi, err := api.Unmarshal(xmlData, position)
 	if err != nil {
-		fmt.Println("Error unmarshalling sequence:", err)
+		d.logger.Error("Error unmarshalling sequence:", "error", err)
 		return
 	}
 	configContext := ctx.Value(utils.ConfigContextKey).(*artifacts.ConfigContext)
 	configContext.AddAPI(newApi)
-	fmt.Println("Deployed API: ", newApi.Name)
+	d.logger.Info("Deployed API: " + newApi.Name)
 }
 
 func (d *Deployer) DeployInbounds(ctx context.Context, fileName string, xmlData string) {
@@ -125,36 +138,35 @@ func (d *Deployer) DeployInbounds(ctx context.Context, fileName string, xmlData 
 	inboundEp := types.Inbound{}
 	newInbound, err := inboundEp.Unmarshal(xmlData, position)
 	if err != nil {
-		fmt.Println("Error unmarshalling sequence:", err)
+		d.logger.Error("Error unmarshalling sequence:", "error", err)
 		return
 	}
 	configContext := ctx.Value(utils.ConfigContextKey).(*artifacts.ConfigContext)
 	configContext.AddInbound(newInbound)
-	fmt.Println("Deployed inbound: ", newInbound.Name)
+	d.logger.Info("Deployed inbound: " + newInbound.Name)
 
 	// Start the inbound endpoint
 	parametersMap := make(map[string]string)
 	for _, param := range newInbound.Parameters {
 		parametersMap[param.Name] = param.Value
 	}
-	inboundEndpoint, eerr := inbound.NewInbound(domain.InboundConfig{
+	inboundEndpoint, err := inbound.NewInbound(domain.InboundConfig{
 		SequenceName: newInbound.Sequence,
 		Name:         newInbound.Name,
 		Protocol:     newInbound.Protocol,
 		Parameters:   parametersMap,
 	})
-	if eerr != nil {
-		fmt.Println("Error creating inbound endpoint:", eerr)
+	if err != nil {
+		d.logger.Error("Error creating inbound endpoint:", "error", err)
 		return
 	}
+
 	wg := ctx.Value(utils.WaitGroupKey).(*sync.WaitGroup)
 	wg.Add(1)
-	go func() {
-		err = inboundEndpoint.Start(ctx, d.inboundMediator)
-		if err != nil {
-			fmt.Println("Error starting inbound endpoint:", err)
-			wg.Done()
-			return
+	go func(endpoint ports.InboundEndpoint) {
+		defer wg.Done()
+		if err := endpoint.Start(ctx, d.inboundMediator); err != nil {
+			d.logger.Error("Error starting inbound endpoint:", "error", err)
 		}
-	}()
+	}(inboundEndpoint)
 }
