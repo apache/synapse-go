@@ -19,28 +19,22 @@
 
 package inbound
 
-import (
-	"errors"
+import "time"
 
-	"github.com/apache/synapse-go/internal/app/core/domain"
-	"github.com/apache/synapse-go/internal/app/core/ports"
-)
+type RealClock struct{}
 
-var (
-	ErrInboundTypeNotFound = errors.New("inbound type not found")
-)
-
-func NewInbound(config domain.InboundConfig) (ports.InboundEndpoint, error) {
-	switch config.Protocol {
-	case "file":
-		return NewFileInboundEndpoint(
-			config, 
-			NewOSFileSystem(), 
-			NewRealClock(), 
-			NewDefaultLogger(), 
-			nil,
-		),nil
-	default:
-		return nil, ErrInboundTypeNotFound
-	}
+func NewRealClock() *RealClock {
+    return &RealClock{}
 }
+
+func (c *RealClock) Now() time.Time {
+    return time.Now()
+}
+
+func (c *RealClock) Sleep(d time.Duration) {
+    time.Sleep(d)
+}
+
+func (c *RealClock) NewTicker(d time.Duration) *time.Ticker {
+    return time.NewTicker(d)
+} 

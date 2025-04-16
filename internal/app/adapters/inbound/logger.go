@@ -19,28 +19,34 @@
 
 package inbound
 
-import (
-	"errors"
+import "fmt"
 
-	"github.com/apache/synapse-go/internal/app/core/domain"
-	"github.com/apache/synapse-go/internal/app/core/ports"
-)
+type DefaultLogger struct{}
 
-var (
-	ErrInboundTypeNotFound = errors.New("inbound type not found")
-)
-
-func NewInbound(config domain.InboundConfig) (ports.InboundEndpoint, error) {
-	switch config.Protocol {
-	case "file":
-		return NewFileInboundEndpoint(
-			config, 
-			NewOSFileSystem(), 
-			NewRealClock(), 
-			NewDefaultLogger(), 
-			nil,
-		),nil
-	default:
-		return nil, ErrInboundTypeNotFound
-	}
+func NewDefaultLogger() *DefaultLogger {
+    return &DefaultLogger{}
 }
+
+func (l *DefaultLogger) Info(msg string, fields ...Field) {
+    fmt.Printf("INFO: %s %v\n", msg, fieldsToMap(fields))
+}
+
+func (l *DefaultLogger) Error(msg string, err error, fields ...Field) {
+    fmt.Printf("ERROR: %s: %v %v\n", msg, err, fieldsToMap(fields))
+}
+
+func (l *DefaultLogger) Debug(msg string, fields ...Field) {
+    fmt.Printf("DEBUG: %s %v\n", msg, fieldsToMap(fields))
+}
+
+func (l *DefaultLogger) Warn(msg string, fields ...Field) {
+    fmt.Printf("WARN: %s %v\n", msg, fieldsToMap(fields))
+}
+
+func fieldsToMap(fields []Field) map[string]interface{} {
+    m := make(map[string]interface{})
+    for _, f := range fields {
+        m[f.Key] = f.Value
+    }
+    return m
+} 
