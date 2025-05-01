@@ -396,7 +396,7 @@ func (f *FileInboundEndpoint) readFile(fileURI string) (*synctx.MsgContext, erro
 		"FILE_NAME":     info.Name(),
 	}
 
-	properties := map[string]string{
+	properties := map[string]interface{}{
 		"isInbound":            "true",
 		"ARTIFACT_NAME":        "inboundendpointfile",
 		"inboundEndpointName":  "file",
