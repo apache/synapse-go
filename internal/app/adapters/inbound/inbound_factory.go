@@ -24,6 +24,7 @@ import (
 
 	"github.com/apache/synapse-go/internal/app/core/domain"
 	"github.com/apache/synapse-go/internal/app/core/ports"
+	"github.com/apache/synapse-go/internal/app/adapters/inbound/file"
 )
 
 var (
@@ -33,13 +34,11 @@ var (
 func NewInbound(config domain.InboundConfig) (ports.InboundEndpoint, error) {
 	switch config.Protocol {
 	case "file":
-		return NewFileInboundEndpoint(
-			config, 
-			NewOSFileSystem(), 
-			NewRealClock(), 
-			NewDefaultLogger(), 
+		return file.NewFileInboundEndpoint(
+			config,
 			nil,
-		),nil
+		), nil
+		
 	default:
 		return nil, ErrInboundTypeNotFound
 	}

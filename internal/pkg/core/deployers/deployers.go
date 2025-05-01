@@ -32,6 +32,7 @@ import (
 	"github.com/apache/synapse-go/internal/app/core/ports"
 	"github.com/apache/synapse-go/internal/pkg/core/artifacts"
 	"github.com/apache/synapse-go/internal/pkg/core/deployers/types"
+	"github.com/apache/synapse-go/internal/pkg/core/router"
 	"github.com/apache/synapse-go/internal/pkg/core/utils"
 	"github.com/apache/synapse-go/internal/pkg/loggerfactory"
 )
@@ -40,9 +41,9 @@ const (
 	componentName = "deployers"
 )
 
-
 type Deployer struct {
 	inboundMediator ports.InboundMessageMediator
+	routerService   *router.RouterService
 	basePath        string
 	logger 			*slog.Logger
 }
@@ -56,8 +57,12 @@ type Deployer struct {
 //    |─ Sequences/
 //    └─ Inbounds/
 
-func NewDeployer(basePath string, inboundMediator ports.InboundMessageMediator) *Deployer {
-	d := &Deployer{basePath: basePath, inboundMediator: inboundMediator}
+func NewDeployer(basePath string, inboundMediator ports.InboundMessageMediator, routerService *router.RouterService) *Deployer {
+	d := &Deployer{
+		basePath:        basePath,
+		inboundMediator: inboundMediator,
+		routerService:   routerService,
+	}
 	d.logger = loggerfactory.GetLogger(componentName, d)
 	return d
 }
@@ -125,12 +130,19 @@ func (d *Deployer) DeployAPIs(ctx context.Context, fileName string, xmlData stri
 	api := types.API{}
 	newApi, err := api.Unmarshal(xmlData, position)
 	if err != nil {
-		d.logger.Error("Error unmarshalling sequence:", "error", err)
+		d.logger.Error("Error unmarshalling api:", "error", err)
 		return
 	}
 	configContext := ctx.Value(utils.ConfigContextKey).(*artifacts.ConfigContext)
 	configContext.AddAPI(newApi)
+
 	d.logger.Info("Deployed API: " + newApi.Name)
+
+	// Register the API with the router service
+	if err := d.routerService.RegisterAPI(ctx, newApi); err != nil {
+		d.logger.Error("Error registering API with router service:", "error", err)
+		return
+	}
 }
 
 func (d *Deployer) DeployInbounds(ctx context.Context, fileName string, xmlData string) {
@@ -138,7 +150,7 @@ func (d *Deployer) DeployInbounds(ctx context.Context, fileName string, xmlData 
 	inboundEp := types.Inbound{}
 	newInbound, err := inboundEp.Unmarshal(xmlData, position)
 	if err != nil {
-		d.logger.Error("Error unmarshalling sequence:", "error", err)
+		d.logger.Error("Error unmarshalling inbound:", "error", err)
 		return
 	}
 	configContext := ctx.Value(utils.ConfigContextKey).(*artifacts.ConfigContext)

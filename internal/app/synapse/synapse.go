@@ -25,6 +25,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strconv"
 	"sync"
 
 	"time"
@@ -33,6 +34,7 @@ import (
 	"github.com/apache/synapse-go/internal/pkg/config"
 	"github.com/apache/synapse-go/internal/pkg/core/artifacts"
 	"github.com/apache/synapse-go/internal/pkg/core/deployers"
+	"github.com/apache/synapse-go/internal/pkg/core/router"
 	"github.com/apache/synapse-go/internal/pkg/core/utils"
 )
 
@@ -66,18 +68,45 @@ func Run(ctx context.Context) error {
 	}
 
 	mediationEngine := mediation.NewMediationEngine()
+
+	// Define default port
+	httpServerPort := 8290
+	var hostname string
+	if serverConfig, ok := conCtx.DeploymentConfig["server"].(map[string]string); ok {
+		hostname = serverConfig["hostname"]
+		if offsetStr, offsetExists := serverConfig["offset"]; offsetExists {
+			if offsetInt, err := strconv.Atoi(offsetStr); err == nil {
+				httpServerPort += offsetInt
+				log.Printf("Using port offset: %d, final port: %d", offsetInt, httpServerPort)
+			} else {
+				log.Printf("Warning: Invalid offset value '%s', using default port", offsetStr)
+			}
+		}
+	}
+
+	// Convert the port to a string format expected by the HTTP server
+	listenPort := fmt.Sprintf(":%d", httpServerPort)
+
+	// Initialize the router service with the calculated port
+	routerService := router.NewRouterService(listenPort, hostname)
+
 	artifactsPath := filepath.Join(binDir, "..", "artifacts")
-	deployer := deployers.NewDeployer(artifactsPath, mediationEngine)
+	deployer := deployers.NewDeployer(artifactsPath, mediationEngine, routerService)
 	err = deployer.Deploy(ctx)
 	if err != nil {
 		log.Printf("Error deploying artifacts: %v", err)
 	}
+
+	// Start HTTP Server
+	routerService.StartServer(ctx)
 
 	elapsed := time.Since(start)
 	log.Printf("Server started in: %v", elapsed)
 
 	<-ctx.Done()
 	wg.Wait()
+	routerService.StopServer()
+	log.Println("HTTP server shutdown gracefully")
 	return nil
 }
 
