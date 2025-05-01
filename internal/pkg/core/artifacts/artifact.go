@@ -38,8 +38,7 @@ type ConfigContext struct {
 	EndpointMap  map[string]Endpoint
 	SequenceMap  map[string]Sequence
 	InboundMap   map[string]Inbound
-	LoggerConfig common.ConfigProvider
-	//ServerConfig common.ConfigProvider
+	DeploymentConfig map[string]interface{}
 }
 
 func (c *ConfigContext) AddAPI(api API) {
@@ -58,8 +57,8 @@ func (c *ConfigContext) AddInbound(inbound Inbound) {
 	c.InboundMap[inbound.Name] = inbound
 }
 
-func (c *ConfigContext) AddLoggerConfig(cfg common.ConfigProvider) {
-	c.LoggerConfig = cfg
+func (c *ConfigContext) AddDeploymentConfig(deploymentConfig map[string]interface{}) {
+	c.DeploymentConfig = deploymentConfig
 }
 
 func (c *ConfigContext) GetEndpoint(epName string) Endpoint {
@@ -82,6 +81,7 @@ func GetConfigContext() *ConfigContext {
 			EndpointMap: make(map[string]Endpoint),
 			SequenceMap: make(map[string]Sequence),
 			InboundMap:  make(map[string]Inbound),
+			DeploymentConfig: make(map[string]interface{}),
 		}
 	})
 	return instance

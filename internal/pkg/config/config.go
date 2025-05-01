@@ -25,6 +25,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strconv"
 
 	"github.com/apache/synapse-go/internal/pkg/core/artifacts"
 	"github.com/apache/synapse-go/internal/pkg/core/utils"
@@ -103,15 +104,16 @@ func (c *Config) MustUnmarshal(key string, out interface{}) {
 }
 
 func InitializeConfig(ctx context.Context, confFolderPath string) error {
-    files, err := os.ReadDir(confFolderPath)
+	files, err := os.ReadDir(confFolderPath)
+	configContext := ctx.Value(utils.ConfigContextKey).(*artifacts.ConfigContext)
 	if err != nil {
 		return err
 	}
 	if len(files) == 0 {
 		return fmt.Errorf("no config files found in %s", confFolderPath)
 	}
-	// {"LoggerConfig", "ServerConfig"}
-	for _, configurationType := range []string{"LoggerConfig"} {
+	// {"LoggerConfig", "deployment"}
+	for _, configurationType := range []string{"LoggerConfig", "deployment"} {
 		configFilePath := filepath.Join(confFolderPath, configurationType+".toml")
 		cfg, err := ReadFile(configFilePath)
 		if err != nil {
@@ -122,25 +124,52 @@ func InitializeConfig(ctx context.Context, confFolderPath string) error {
 		case "LoggerConfig":
 			var levelMap map[string]string
 			var slogHandlerConfig loggerfactory.SlogHandlerConfig
-		
+
 			if cfg.IsSet("logger") {
 				cfg.MustUnmarshal("logger.handler", &slogHandlerConfig)
 				cfg.MustUnmarshal("logger.level.packages", &levelMap)
 			}
-		
+
 			cm := loggerfactory.GetConfigManager()
 			cm.SetLogLevelMap(&levelMap)
 			cm.SetSlogHandlerConfig(slogHandlerConfig)
-		
+
 			// Start watching for config changes
 			cfg.Watch(context.Background(), configFilePath)
-		
-			// Add the config to the context
-			configContext := ctx.Value(utils.ConfigContextKey).(*artifacts.ConfigContext)
-			configContext.AddLoggerConfig(cfg)	
 
-		// case "ServerConfig":
-		// TODO: Add server config
+		case "deployment":
+			deploymentConfigMap := make(map[string]interface{})
+			if cfg.IsSet("server") {
+				var serverConfigMap map[string]string
+				cfg.MustUnmarshal("server", &serverConfigMap)
+
+				// Validate required hostname key
+				hostname, exists := serverConfigMap["hostname"]
+				if !exists {
+					return fmt.Errorf("missing required server configuration key: hostname")
+				}
+
+				// Validate hostname value
+				if hostname == "" {
+					return fmt.Errorf("server hostname cannot be empty")
+				}
+
+				// Validate offset if it exists (optional)
+				if offsetStr, hasOffset := serverConfigMap["offset"]; hasOffset && offsetStr != "" {
+					offset, err := strconv.Atoi(offsetStr)
+					if err != nil {
+						return fmt.Errorf("invalid server offset value: %s, must be an integer", offsetStr)
+					}
+					if offset < 0 {
+						return fmt.Errorf("server offset must be non-negative, got: %d", offset)
+					}
+				}
+				deploymentConfigMap["server"] = serverConfigMap
+			} else {
+				return fmt.Errorf("server configuration section is required in deployment.toml")
+			}
+
+			configContext.AddDeploymentConfig(deploymentConfigMap)
 		}
 	}
 	return nil
