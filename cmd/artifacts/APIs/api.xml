@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<api name="HealthcareAPI" context="/healthcare/{version}/services" version="1.0" version-type="context" xmlns="http://ws.apache.org/ns/synapse">
+    <resource methods="GET" uri-template="/querydoctor_1/{category}?name={name}&amp;age={age}">
+        <inSequence>
+            <log category="INFO" logMessageID="false" logFullPayload="false" description="Request Log">
+                <message>message from healthcare api (version 1) get querydoctor resource</message>
+                <property name="Log Property message" value="&quot;Welcome to HealthcareService&quot;"/>
+            </log>
+        </inSequence>
+        <faultSequence>
+            <log category="INFO" logMessageID="false" logFullPayload="false" description="Request Log">
+                <message></message>
+                <property name="false message" value="&quot;Fault Sequence&quot;"/>
+            </log>
+        </faultSequence>
+    </resource>
+        <resource methods="GET" uri-template="/changedoctor_1/{category}">
+        <inSequence>
+            <log category="INFO" logMessageID="false" logFullPayload="false" description="Request Log">
+                <message>message from healthcare api (version 1) post get patch changedoctor resource</message>
+                <property name="Log Property message" value="&quot;Welcome to HealthcareService&quot;"/>
+            </log>
+        </inSequence>
+        <faultSequence>
+            <log category="INFO" logMessageID="false" logFullPayload="false" description="Request Log">
+                <message></message>
+                <property name="false message" value="&quot;Fault Sequence&quot;"/>
+            </log>
+        </faultSequence>
+    </resource>
+</api>

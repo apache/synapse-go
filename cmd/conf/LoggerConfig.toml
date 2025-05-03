@@ -4,6 +4,7 @@ level.default = "warn"
 [logger.level.packages]
 mediation = "error"
 deployers = "error"
+router = "info"
 
 [logger.handler]
 format = "json"

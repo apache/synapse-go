@@ -19,16 +19,40 @@
 
 package artifacts
 
+import (
+	"github.com/apache/synapse-go/internal/pkg/core/synctx"
+)
+
 type Resource struct {
-	Methods       string
-	URITemplate   string
+	Methods       []string
+	URITemplate   URITemplateInfo
 	InSequence    Sequence
 	FaultSequence Sequence
 }
 
+type URITemplateInfo struct {
+	FullTemplate    string            // The original full URI template
+	PathTemplate    string            // Just the path part (without query)
+	PathParameters  []string          // List of path parameters
+	QueryParameters map[string]string // Map of query param name to variable name
+}
+
 type API struct {
-	Context   string
-	Name      string
-	Resources []Resource
-	Position  Position
+	Context     string
+	Name        string
+	Version     string
+	VersionType string
+	Resources   []Resource
+	Position    Position
+}
+
+func (r *Resource) Mediate(context *synctx.MsgContext) bool {
+	isSuccessInSeq := r.InSequence.Execute(context)
+	if !isSuccessInSeq {
+		isCompleteFaultSeq := r.FaultSequence.Execute(context)
+		if !isCompleteFaultSeq {
+			return false
+		}
+	}
+	return true
 }
