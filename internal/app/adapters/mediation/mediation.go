@@ -21,9 +21,8 @@ package mediation
 
 import (
 	"context"
+	"errors"
 	"log/slog"
-	"sync"
-	
 
 	"github.com/apache/synapse-go/internal/pkg/core/artifacts"
 	"github.com/apache/synapse-go/internal/pkg/core/synctx"
@@ -50,25 +49,19 @@ func (m *MediationEngine) UpdateLogger() {
 }
 
 func (m *MediationEngine) MediateInboundMessage(ctx context.Context, seqName string, msg *synctx.MsgContext) error {
-	waitgroup := ctx.Value(utils.WaitGroupKey).(*sync.WaitGroup)
 	configContext := ctx.Value(utils.ConfigContextKey).(*artifacts.ConfigContext)
-	waitgroup.Add(1)
-	go func() {
-		defer waitgroup.Done()
-		select {
-		case <-ctx.Done():
-			m.logger.Info("Mediation of sequence stopped since context is done")
-			waitgroup.Done()
-			return
-		default:
-			sequence, exists := configContext.SequenceMap[seqName]
-			if !exists {
-				m.logger.Error("Sequence " + seqName + " not found")
-				return
-			}
-			sequence.Execute(msg)
+	select {
+	case <-ctx.Done():
+		m.logger.Info("Mediation of sequence stopped since context is done")
+		return ctx.Err()
+	default:
+		sequence, exists := configContext.SequenceMap[seqName]
+		if !exists {
+			m.logger.Error("Sequence " + seqName + " not found")
+			return errors.New("sequence not found")
 		}
-	}()
+		sequence.Execute(msg)
+	}
 	return nil
 
 }
