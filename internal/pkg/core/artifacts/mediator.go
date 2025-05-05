@@ -19,8 +19,12 @@
 
 package artifacts
 
-import "github.com/apache/synapse-go/internal/pkg/core/synctx"
+import (
+	"context"
+
+	"github.com/apache/synapse-go/internal/pkg/core/synctx"
+)
 
 type Mediator interface {
-	Execute(context *synctx.MsgContext) (bool, error)
+	Execute(context *synctx.MsgContext, ctx context.Context) (bool, error)
 }
