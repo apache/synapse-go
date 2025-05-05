@@ -218,7 +218,7 @@ func (f *FileInboundEndpoint) processFile(ctx context.Context, fileURI string) e
 		"FILE_NAME":     fileName,
 	}
 
-	properties := map[string]string{
+	properties := map[string]interface{}{
 		"isInbound":            "true",
 		"ARTIFACT_NAME":        "inboundendpointfile",
 		"inboundEndpointName":  "file",
