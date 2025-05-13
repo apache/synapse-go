@@ -60,7 +60,7 @@ func (m *MediationEngine) MediateInboundMessage(ctx context.Context, seqName str
 			m.logger.Error("Sequence " + seqName + " not found")
 			return errors.New("sequence not found")
 		}
-		sequence.Execute(msg)
+		sequence.Execute(msg,ctx)
 	}
 	return nil
 

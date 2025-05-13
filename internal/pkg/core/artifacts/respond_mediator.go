@@ -20,8 +20,9 @@
 package artifacts
 
 import (
+	"context"
 	"fmt"
-	
+
 	"github.com/apache/synapse-go/internal/pkg/core/synctx"
 )
 
@@ -31,7 +32,7 @@ type RespondMediator struct {
 	Position Position
 }
 
-func (rm RespondMediator) Execute(context *synctx.MsgContext) (bool, error) {
+func (rm RespondMediator) Execute(context *synctx.MsgContext,  ctx context.Context) (bool, error) {
 	// Set msg context header as a flag. If the header is set, it means the message has been processed and good to response
 	context.Headers["http-response"] = "true"
 	fmt.Println("Respond mediator")

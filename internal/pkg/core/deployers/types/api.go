@@ -308,8 +308,14 @@ func (r *Resource) decodeSequence(decoder *xml.Decoder, position artifacts.Posit
 						return artifacts.Sequence{}, err
 					}
 					mediatorList = append(mediatorList, mediator)
+				case "call":
+					callMediator := CallMediator{}
+					mediator, err := callMediator.Unmarshal(decoder, startElem, position)
+					if err != nil {
+						return artifacts.Sequence{}, err
+					}
+					mediatorList = append(mediatorList, mediator)
 				}
-
 				// Continue processing other elements
 			OuterLoop:
 				for {
@@ -325,6 +331,13 @@ func (r *Resource) decodeSequence(decoder *xml.Decoder, position artifacts.Posit
 						case "log":
 							logMediator := LogMediator{}
 							mediator, err := logMediator.Unmarshal(decoder, element, position)
+							if err != nil {
+								return artifacts.Sequence{}, err
+							}
+							mediatorList = append(mediatorList, mediator)
+						case "call":
+							callMediator := CallMediator{}
+							mediator, err := callMediator.Unmarshal(decoder, element, position)
 							if err != nil {
 								return artifacts.Sequence{}, err
 							}

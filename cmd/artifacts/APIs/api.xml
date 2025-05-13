@@ -13,6 +13,9 @@
                 <message>message from healthcare api (version 1) get querydoctor resource</message>
                 <property name="Log Property message" value="&quot;Welcome to HealthcareService&quot;"/>
             </log>
+            <call>
+                <endpoint key="HttpGetEndpoint"/>
+            </call> 
         </inSequence>
         <faultSequence>
             <log category="INFO" logMessageID="false" logFullPayload="false" description="Request Log">
