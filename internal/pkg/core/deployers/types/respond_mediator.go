@@ -17,35 +17,26 @@
  *  under the License.
  */
 
-package inbound
+package types
 
 import (
+	"encoding/xml"
 	"errors"
+	"strconv"
 
-	"github.com/apache/synapse-go/internal/app/adapters/inbound/file"
-	"github.com/apache/synapse-go/internal/app/adapters/inbound/http"
-	"github.com/apache/synapse-go/internal/app/core/domain"
-	"github.com/apache/synapse-go/internal/app/core/ports"
+	"github.com/apache/synapse-go/internal/pkg/core/artifacts"
 )
 
-var (
-	ErrInboundTypeNotFound = errors.New("inbound type not found")
-)
+type RespondMediator struct {
+	XMLName  xml.Name `xml:"respond"`
+}
 
-func NewInbound(config domain.InboundConfig) (ports.InboundEndpoint, error) {
-	switch config.Protocol {
-	case "file":
-		return file.NewFileInboundEndpoint(
-			config,
-			nil,
-		), nil
-
-	case "http":
-		return http.NewHTTPInboundEndpoint(
-			config,
-			nil,
-		), nil
-	default:
-		return nil, ErrInboundTypeNotFound
+func (respondMediator RespondMediator) Unmarshal(d *xml.Decoder, start xml.StartElement, position artifacts.Position) (artifacts.Mediator, error) {
+	if err := d.DecodeElement(&respondMediator, &start); err != nil {
+		return artifacts.RespondMediator{}, errors.New("error in unmarshalling respond mediator in " + position.FileName + " at line " + strconv.Itoa(position.LineNo))
 	}
+	position.Hierarchy = position.Hierarchy + "->respond"
+	return artifacts.RespondMediator{
+		Position: position,
+	}, nil
 }
