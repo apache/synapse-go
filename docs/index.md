@@ -26,4 +26,4 @@ This documentation is organized into several sections:
 
 ## Getting Started
 
-To get started with Synapse Go, see the [Building & Packaging](/getting-started/building) section for instructions on how to build and run the project.
+To get started with Synapse Go, see the [Getting Started](/getting-started) section for instructions on how to build and run the project.

@@ -39,6 +39,8 @@ markdown_extensions:
 
 nav:
   - Home: index.md
+  - Getting Started: getting-started.md
+  - Current Implementation Status: implementation-status.md
   - Architecture:
     - Hexagonal Architecture: architecture/hexagonal.md
     - Application Lifecycle: architecture/lifecycle.md
