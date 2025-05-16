@@ -20,6 +20,8 @@
 package artifacts
 
 import (
+	"context"
+
 	"github.com/apache/synapse-go/internal/pkg/core/synctx"
 )
 
@@ -46,10 +48,10 @@ type API struct {
 	Position    Position
 }
 
-func (r *Resource) Mediate(context *synctx.MsgContext) bool {
-	isSuccessInSeq := r.InSequence.Execute(context)
+func (r *Resource) Mediate(context *synctx.MsgContext, ctx context.Context) bool {
+	isSuccessInSeq := r.InSequence.Execute(context, ctx)
 	if !isSuccessInSeq {
-		isCompleteFaultSeq := r.FaultSequence.Execute(context)
+		isCompleteFaultSeq := r.FaultSequence.Execute(context, ctx)
 		if !isCompleteFaultSeq {
 			return false
 		}

@@ -17,14 +17,24 @@
  *  under the License.
  */
 
-package artifacts
+package file
 
-import (
-	"context"
+import "time"
 
-	"github.com/apache/synapse-go/internal/pkg/core/synctx"
-)
+type FileClock struct{}
 
-type Mediator interface {
-	Execute(context *synctx.MsgContext, ctx context.Context) (bool, error)
+func NewFileClock() FileClock {
+	return FileClock{}
+}
+
+func (c FileClock) Now() time.Time {
+	return time.Now()
+}
+
+func (c FileClock) Sleep(d time.Duration) {
+	time.Sleep(d)
+}
+
+func (c FileClock) NewTicker(d time.Duration) *time.Ticker {
+	return time.NewTicker(d)
 }
