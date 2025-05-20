@@ -28,7 +28,7 @@ import (
 // Secondary/Driven Port
 type InboundEndpoint interface {
 	Start(ctx context.Context, mediator InboundMessageMediator) error
-	Stop() error
+	Stop(ctx context.Context) error
 }
 
 // Primary/Driving Port

@@ -23,6 +23,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/apache/synapse-go/internal/pkg/core/artifacts"
@@ -44,13 +45,28 @@ type API struct {
 	Version     string               `xml:"version,attr"`
 	VersionType string               `xml:"version-type,attr"`
 	Resources   []artifacts.Resource `xml:"resource"`
+	CORS        *CORSElement         `xml:"cors,omitempty"`
 	Position    artifacts.Position
+}
+
+// CORSElement represents the XML structure for CORS configuration
+type CORSElement struct {
+	Enabled          string `xml:"enabled,attr,omitempty"`
+	AllowOrigins     string `xml:"allow-origins,attr,omitempty"`
+	AllowMethods     string `xml:"allow-methods,attr,omitempty"`
+	AllowHeaders     string `xml:"allow-headers,attr,omitempty"`
+	ExposeHeaders    string `xml:"expose-headers,attr,omitempty"`
+	AllowCredentials string `xml:"allow-credentials,attr,omitempty"`
+	MaxAge           string `xml:"max-age,attr,omitempty"`
 }
 
 func (api *API) Unmarshal(xmlData string, position artifacts.Position) (artifacts.API, error) {
 	decoder := xml.NewDecoder(strings.NewReader(xmlData))
 	newAPI := artifacts.API{}
 	newAPI.Position = position
+	// Initialize with default CORS configuration
+	newAPI.CORSConfig = artifacts.DefaultCORSConfig()
+
 	for {
 		token, err := decoder.Token()
 		if err != nil {
@@ -73,6 +89,67 @@ func (api *API) Unmarshal(xmlData string, position artifacts.Position) (artifact
 						newAPI.VersionType = attr.Value
 					}
 				}
+			case "cors":
+				// Parse CORS element
+				corsElem := &CORSElement{}
+				if err := decoder.DecodeElement(corsElem, &elem); err != nil {
+					return artifacts.API{}, fmt.Errorf("error decoding CORS element: %w", err)
+				}
+
+				// Parse the CORS configuration
+				cors := artifacts.DefaultCORSConfig()
+
+				// Enable CORS if specified
+				if corsElem.Enabled == "true" {
+					cors.Enabled = true
+				}
+
+				// Parse allowed origins
+				if corsElem.AllowOrigins != "" {
+					cors.AllowOrigins = strings.Split(corsElem.AllowOrigins, ",")
+					for i := range cors.AllowOrigins {
+						cors.AllowOrigins[i] = strings.TrimSpace(cors.AllowOrigins[i])
+					}
+				}
+
+				// Parse allowed methods
+				if corsElem.AllowMethods != "" {
+					cors.AllowMethods = strings.Split(corsElem.AllowMethods, ",")
+					for i := range cors.AllowMethods {
+						cors.AllowMethods[i] = strings.TrimSpace(cors.AllowMethods[i])
+					}
+				}
+
+				// Parse allowed headers
+				if corsElem.AllowHeaders != "" {
+					cors.AllowHeaders = strings.Split(corsElem.AllowHeaders, ",")
+					for i := range cors.AllowHeaders {
+						cors.AllowHeaders[i] = strings.TrimSpace(cors.AllowHeaders[i])
+					}
+				}
+
+				// Parse exposed headers
+				if corsElem.ExposeHeaders != "" {
+					cors.ExposeHeaders = strings.Split(corsElem.ExposeHeaders, ",")
+					for i := range cors.ExposeHeaders {
+						cors.ExposeHeaders[i] = strings.TrimSpace(cors.ExposeHeaders[i])
+					}
+				}
+
+				// Parse allow credentials
+				if corsElem.AllowCredentials == "true" {
+					cors.AllowCredentials = true
+				}
+
+				// Parse max age
+				if corsElem.MaxAge != "" {
+					maxAge, err := strconv.Atoi(corsElem.MaxAge)
+					if err == nil && maxAge > 0 {
+						cors.MaxAge = maxAge
+					}
+				}
+
+				newAPI.CORSConfig = cors
 			case "resource":
 				var resource = Resource{}
 				res, err := resource.Unmarshal(decoder, elem, newAPI.Position)
@@ -231,8 +308,14 @@ func (r *Resource) decodeSequence(decoder *xml.Decoder, position artifacts.Posit
 						return artifacts.Sequence{}, err
 					}
 					mediatorList = append(mediatorList, mediator)
+				case "call":
+					callMediator := CallMediator{}
+					mediator, err := callMediator.Unmarshal(decoder, startElem, position)
+					if err != nil {
+						return artifacts.Sequence{}, err
+					}
+					mediatorList = append(mediatorList, mediator)
 				}
-
 				// Continue processing other elements
 			OuterLoop:
 				for {
@@ -248,6 +331,13 @@ func (r *Resource) decodeSequence(decoder *xml.Decoder, position artifacts.Posit
 						case "log":
 							logMediator := LogMediator{}
 							mediator, err := logMediator.Unmarshal(decoder, element, position)
+							if err != nil {
+								return artifacts.Sequence{}, err
+							}
+							mediatorList = append(mediatorList, mediator)
+						case "call":
+							callMediator := CallMediator{}
+							mediator, err := callMediator.Unmarshal(decoder, element, position)
 							if err != nil {
 								return artifacts.Sequence{}, err
 							}

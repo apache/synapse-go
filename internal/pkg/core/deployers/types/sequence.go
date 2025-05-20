@@ -56,6 +56,13 @@ OuterLoop:
 					return artifacts.Sequence{}, err
 				}
 				mediatorList = append(mediatorList, mediator)
+			case "respond":
+				respondMediator := RespondMediator{}
+				mediator, err := respondMediator.Unmarshal(decoder, element, position)
+				if err != nil {
+					return artifacts.Sequence{}, err
+				}
+				mediatorList = append(mediatorList, mediator)
 			}
 		case xml.EndElement:
 			// Stop when the </sequence> tag is encountered

@@ -22,11 +22,10 @@ package artifacts
 type Endpoint struct {
 	Name        string
 	EndpointUrl EndpointUrl
-	FileName    string
 	Position    Position
 }
 
 type EndpointUrl struct {
-	Method string
-	URL    string
+	Method 		string
+	URITemplate string
 }

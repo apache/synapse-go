@@ -17,14 +17,26 @@
  *  under the License.
  */
 
-package artifacts
+package types
 
 import (
-	"context"
+	"encoding/xml"
+	"errors"
+	"strconv"
 
-	"github.com/apache/synapse-go/internal/pkg/core/synctx"
+	"github.com/apache/synapse-go/internal/pkg/core/artifacts"
 )
 
-type Mediator interface {
-	Execute(context *synctx.MsgContext, ctx context.Context) (bool, error)
+type RespondMediator struct {
+	XMLName  xml.Name `xml:"respond"`
+}
+
+func (respondMediator RespondMediator) Unmarshal(d *xml.Decoder, start xml.StartElement, position artifacts.Position) (artifacts.Mediator, error) {
+	if err := d.DecodeElement(&respondMediator, &start); err != nil {
+		return artifacts.RespondMediator{}, errors.New("error in unmarshalling respond mediator in " + position.FileName + " at line " + strconv.Itoa(position.LineNo))
+	}
+	position.Hierarchy = position.Hierarchy + "->respond"
+	return artifacts.RespondMediator{
+		Position: position,
+	}, nil
 }

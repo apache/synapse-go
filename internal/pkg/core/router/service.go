@@ -31,6 +31,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -94,6 +95,31 @@ func (rs *RouterService) RegisterAPI(ctx context.Context, api artifacts.API) err
 		}
 	}
 
+	// Register swagger documentation handlers with appropriate versioning in URL
+	// If version is not empty, register at /<API_NAME>:<API_VERSION>
+	// If version is empty, register at /<API_NAME>
+	swaggerBasePath := "/" + api.Name
+	if api.Version != "" {
+		swaggerBasePath = swaggerBasePath + ":" + api.Version
+	}
+
+	rs.router.HandleFunc(swaggerBasePath, func(w http.ResponseWriter, r *http.Request) {
+		// Get the query parameters from the URL
+		query := r.URL.Query()
+			
+		// Check for swagger file extension in the path
+		if _, exists := query["swagger.yaml"]; exists {
+			api.ServeSwaggerYAML(w, rs.hostname, rs.port)
+			return
+		}
+
+		if _, exists := query["swagger.json"]; exists {
+			api.ServeSwaggerJSON(w, rs.hostname, rs.port)
+			return
+		}
+		http.NotFound(w, r)
+	})
+
 	// Create a subrouter for this API
 	apiHandler := http.NewServeMux()
 
@@ -104,12 +130,20 @@ func (rs *RouterService) RegisterAPI(ctx context.Context, api artifacts.API) err
 			// Construct the full pattern: "METHOD /path/to/resource"
 			pattern := method + " " + resource.URITemplate.PathTemplate
 			// Create a wrapper handler that checks query parameters before forwarding to the resource handler
-			queryParamHandler := rs.createQueryParamMiddleware(resource, rs.createResourceHandler(resource))
+			queryParamHandler := rs.createQueryParamMiddleware(resource, rs.createResourceHandler(resource, ctx))
 			apiHandler.HandleFunc(pattern, queryParamHandler)
 			rs.logger.Info("Registered route for API",
 				slog.String("api_name", api.Name),
 				slog.String("pattern", pattern))
+			// No need to register explicit OPTIONS handlers when using rs/cors package
+			// The CORSMiddleware already handles OPTIONS preflight requests automatically
 		}
+	}
+
+	// Apply CORS middleware to the entire API subrouter if enabled
+	var handler http.Handler = apiHandler
+	if api.CORSConfig.Enabled {
+		handler = CORSMiddleware(handler, api.CORSConfig)
 	}
 
 	// Register the API handler with the main router
@@ -118,13 +152,20 @@ func (rs *RouterService) RegisterAPI(ctx context.Context, api artifacts.API) err
 }
 
 // createHandlerFunc creates an HTTP handler function for the given API resource
-func (rs *RouterService) createResourceHandler(resource artifacts.Resource) http.HandlerFunc {
+func (rs *RouterService) createResourceHandler(resource artifacts.Resource, ctx context.Context) http.HandlerFunc {
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		// Create message context
 		msgContext := synctx.CreateMsgContext()
 
-		// Set request body into message context properties
-		msgContext.Properties["http_request_body"] = r.Body
+		bodyBytes, err := io.ReadAll(r.Body)
+		if err != nil {
+		  http.Error(w, "Error reading request body", http.StatusBadRequest)
+		  return
+		}
+		r.Body.Close() // Properly close the body
+		msgContext.Message.RawPayload = bodyBytes
+
+		msgContext.Message.ContentType = r.Header.Get("Content-Type")
 
 		// Set path parameters into message context properties
 		pathParamsMap := make(map[string]string)
@@ -155,7 +196,7 @@ func (rs *RouterService) createResourceHandler(resource artifacts.Resource) http
 		}
 
 		// Process through mediation pipeline
-		success := resource.Mediate(msgContext)
+		success := resource.Mediate(msgContext, ctx)
 
 		// Write response
 		if success {
