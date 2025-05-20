@@ -1,0 +1,4 @@
+<endpoint name="HttpGetEndpoint" xmlns="http://ws.apache.org/ns/synapse">
+    <http method="GET" uri-template="http://example.com/api/resource">
+    </http>
+</endpoint>

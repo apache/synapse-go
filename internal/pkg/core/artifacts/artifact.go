@@ -34,10 +34,10 @@ type EndpointProvider interface {
 }
 
 type ConfigContext struct {
-	ApiMap       map[string]API
-	EndpointMap  map[string]Endpoint
-	SequenceMap  map[string]Sequence
-	InboundMap   map[string]Inbound
+	ApiMap           map[string]API
+	EndpointMap      map[string]Endpoint
+	SequenceMap      map[string]Sequence
+	InboundMap       map[string]Inbound
 	DeploymentConfig map[string]interface{}
 }
 
@@ -61,12 +61,12 @@ func (c *ConfigContext) AddDeploymentConfig(deploymentConfig map[string]interfac
 	c.DeploymentConfig = deploymentConfig
 }
 
-func (c *ConfigContext) GetEndpoint(epName string) Endpoint {
+func (c *ConfigContext) GetEndpoint(epName string) *Endpoint {
 	endpoint, exists := c.EndpointMap[epName]
 	if !exists {
-		return Endpoint{}
+		return nil
 	}
-	return endpoint
+	return &endpoint
 }
 
 var instance *ConfigContext
@@ -77,10 +77,10 @@ var once sync.Once
 func GetConfigContext() *ConfigContext {
 	once.Do(func() {
 		instance = &ConfigContext{
-			ApiMap:      make(map[string]API),
-			EndpointMap: make(map[string]Endpoint),
-			SequenceMap: make(map[string]Sequence),
-			InboundMap:  make(map[string]Inbound),
+			ApiMap:           make(map[string]API),
+			EndpointMap:      make(map[string]Endpoint),
+			SequenceMap:      make(map[string]Sequence),
+			InboundMap:       make(map[string]Inbound),
 			DeploymentConfig: make(map[string]interface{}),
 		}
 	})

@@ -20,6 +20,7 @@
 package artifacts
 
 import (
+	"context"
 	"testing"
 
 	"github.com/apache/synapse-go/internal/pkg/core/synctx"
@@ -65,7 +66,7 @@ func TestLogMediator_Execute(t *testing.T) {
 				Message:  tt.message,
 			}
 			msgContext := synctx.MsgContext{}
-			got, err := lm.Execute(&msgContext)
+			got, err := lm.Execute(&msgContext, context.Background())
 			if (err != nil) != tt.wantErr {
 				t.Errorf("LogMediator.Execute() error = %v, wantErr %v", err, tt.wantErr)
 				return

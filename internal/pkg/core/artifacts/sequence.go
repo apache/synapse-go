@@ -20,6 +20,7 @@
 package artifacts
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/apache/synapse-go/internal/pkg/core/synctx"
@@ -31,9 +32,9 @@ type Sequence struct {
 	Name         string
 }
 
-func (v *Sequence) Execute(context *synctx.MsgContext) bool {
+func (v *Sequence) Execute(context *synctx.MsgContext, ctx context.Context) bool {
 	for _, mediator := range v.MediatorList {
-		result, err := mediator.Execute(context)
+		result, err := mediator.Execute(context, ctx)
 		if !result {
 			return false
 		}

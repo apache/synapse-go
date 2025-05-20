@@ -79,7 +79,7 @@ func (d *Deployer) Deploy(ctx context.Context) error {
 	if len(files) == 0 {
 		return nil
 	}
-	for _, artifactType := range []string{"Sequences", "APIs", "Inbounds"} {
+	for _, artifactType := range []string{"Sequences", "APIs", "Inbounds","Endpoints"} {
 		folderPath := filepath.Join(d.basePath, artifactType)
 		files, err := os.ReadDir(folderPath)
 		if err != nil {
@@ -106,6 +106,8 @@ func (d *Deployer) Deploy(ctx context.Context) error {
 				d.DeploySequences(ctx, file.Name(), string(data))
 			case "Inbounds":
 				d.DeployInbounds(ctx, file.Name(), string(data))
+			case "Endpoints":
+				d.DeployEndpoints(ctx, file.Name(), string(data))
 			}
 		}
 	}
@@ -181,4 +183,17 @@ func (d *Deployer) DeployInbounds(ctx context.Context, fileName string, xmlData 
 			d.logger.Error("Error starting inbound endpoint:", "error", err)
 		}
 	}(inboundEndpoint)
+}
+
+func (d *Deployer) DeployEndpoints(ctx context.Context, fileName string, xmlData string) {
+	position := artifacts.Position{FileName: fileName}
+	endpoint := types.Endpoint{}
+	newEndpoint, err := endpoint.Unmarshal(xmlData, position)
+	if err != nil {
+		d.logger.Error("Error unmarshalling endpoint:", "error", err)
+		return
+	}
+	configContext := ctx.Value(utils.ConfigContextKey).(*artifacts.ConfigContext)
+	configContext.AddEndpoint(newEndpoint)
+	d.logger.Info("Deployed endpoint: " + newEndpoint.Name)
 }
