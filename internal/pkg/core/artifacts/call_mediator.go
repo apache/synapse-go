@@ -48,7 +48,7 @@ func (cm CallMediator) Execute(msgContext *synctx.MsgContext, ctx context.Contex
 
 	configContext, ok := configContextValue.(*ConfigContext)
 	if !ok {
-		return false, fmt.Errorf("invalid config context type at %s", cm.Position.Hierarchy)
+		return false, fmt.Errorf("invalid config context type")
 	}
 
 	// Find the endpoint in the ConfigContext's EndpointMap
