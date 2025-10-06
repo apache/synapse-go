@@ -17,14 +17,35 @@
  *  under the License.
  */
 
-package artifacts
+package router
 
 import (
-	"context"
+	"net/http"
 
-	"github.com/apache/synapse-go/internal/pkg/core/synctx"
+	"github.com/apache/synapse-go/internal/pkg/core/artifacts"
+	"github.com/rs/cors"
 )
 
-type Mediator interface {
-	Execute(context *synctx.MsgContext, ctx context.Context) (bool, error)
+// CORSMiddleware applies CORS headers based on the provided configuration using rs/cors package
+func CORSMiddleware(handler http.Handler, config artifacts.CORSConfig) http.Handler {
+	// Skip CORS handling if disabled
+	if !config.Enabled {
+		return handler
+	}
+
+	// Convert our config to rs/cors options
+	options := cors.Options{
+		AllowedOrigins:   config.AllowOrigins,
+		AllowedMethods:   config.AllowMethods,
+		AllowedHeaders:   config.AllowHeaders,
+		ExposedHeaders:   config.ExposeHeaders,
+		AllowCredentials: config.AllowCredentials,
+		MaxAge:           config.MaxAge,
+	}
+
+	// Create the cors handler
+	corsHandler := cors.New(options)
+
+	// Use the handler as middleware
+	return corsHandler.Handler(handler)
 }

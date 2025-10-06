@@ -22,9 +22,10 @@ package inbound
 import (
 	"errors"
 
+	"github.com/apache/synapse-go/internal/app/adapters/inbound/file"
+	"github.com/apache/synapse-go/internal/app/adapters/inbound/http"
 	"github.com/apache/synapse-go/internal/app/core/domain"
 	"github.com/apache/synapse-go/internal/app/core/ports"
-	"github.com/apache/synapse-go/internal/app/adapters/inbound/file"
 )
 
 var (
@@ -38,7 +39,12 @@ func NewInbound(config domain.InboundConfig) (ports.InboundEndpoint, error) {
 			config,
 			nil,
 		), nil
-		
+
+	case "http":
+		return http.NewHTTPInboundEndpoint(
+			config,
+			nil,
+		), nil
 	default:
 		return nil, ErrInboundTypeNotFound
 	}
