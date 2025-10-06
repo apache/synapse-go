@@ -92,7 +92,7 @@ func (f *FileInboundEndpoint) Start(ctx context.Context, mediator ports.InboundM
 }
 
 // Call this using a channel
-func (f *FileInboundEndpoint) Stop() error {
+func (f *FileInboundEndpoint) Stop(ctx context.Context) error {
 	slog.Info("stopping file inbound endpoint")
 	f.isRunning = false
 	return nil

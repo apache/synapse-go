@@ -25,6 +25,39 @@ This is an attempt to re-write the synapse code is Golang.
 
 Ensure it meets the minimum requirement.
 
+## Comprehensive Developer Documentation
+
+The project includes comprehensive developer documentation that covers the architecture, components, and contribution guidelines.
+
+You can find:
+- **Project Overview**: Introduction to Synapse Go, its features, and documentation organization
+- **Getting Started Guide**: Complete setup instructions including prerequisites, building, packaging, and running the application
+- **Architecture and implementation details**: Current state of the implementation and roadmap
+
+### Accessing the Documentation
+
+1. **Install MkDocs and the Material theme with extensions**:
+   ```
+   pip install mkdocs mkdocs-material mkdocs-material-extensions
+   ```
+
+2. **Run the documentation server locally**:
+   ```
+   mkdocs serve
+   ```
+
+3. **View the documentation** at http://localhost:8000 in your web browser
+
+### Documentation Structure
+
+The documentation is organized into several sections:
+
+- **Architecture**: Details about hexagonal architecture, application lifecycle, and context flow
+- **Core Components**: Documentation for configuration, logging, context usage, and various inbound endpoints
+- **Contributing**: Guidelines for contribution and development setup
+
+For more details, refer to the `docs/` directory in the project.
+
 ## Building & Packaging
 
 1. **Install Dependencies**
@@ -38,7 +71,6 @@ To compile the Synapse binary for your local machine
 ```
 make build
 ```
-
 
 This fetches dependencies (if not already done).
 

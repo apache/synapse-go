@@ -5,6 +5,7 @@ level.default = "warn"
 mediation = "error"
 deployers = "error"
 router = "info"
+http = "info"
 
 [logger.handler]
 format = "json"

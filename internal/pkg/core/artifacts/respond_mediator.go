@@ -17,35 +17,25 @@
  *  under the License.
  */
 
-package inbound
+package artifacts
 
 import (
-	"errors"
+	"context"
+	"fmt"
 
-	"github.com/apache/synapse-go/internal/app/adapters/inbound/file"
-	"github.com/apache/synapse-go/internal/app/adapters/inbound/http"
-	"github.com/apache/synapse-go/internal/app/core/domain"
-	"github.com/apache/synapse-go/internal/app/core/ports"
+	"github.com/apache/synapse-go/internal/pkg/core/synctx"
 )
 
-var (
-	ErrInboundTypeNotFound = errors.New("inbound type not found")
-)
-
-func NewInbound(config domain.InboundConfig) (ports.InboundEndpoint, error) {
-	switch config.Protocol {
-	case "file":
-		return file.NewFileInboundEndpoint(
-			config,
-			nil,
-		), nil
-
-	case "http":
-		return http.NewHTTPInboundEndpoint(
-			config,
-			nil,
-		), nil
-	default:
-		return nil, ErrInboundTypeNotFound
-	}
+// Dummy implementation of the RespondMediator
+// This is a placeholder for the actual implementation
+type RespondMediator struct {
+	Position Position
 }
+
+func (rm RespondMediator) Execute(context *synctx.MsgContext,  ctx context.Context) (bool, error) {
+	// Set msg context header as a flag. If the header is set, it means the message has been processed and good to response
+	context.Headers["http-response"] = "true"
+	fmt.Println("Respond mediator")
+	return true, nil
+}
+  

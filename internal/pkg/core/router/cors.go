@@ -17,35 +17,35 @@
  *  under the License.
  */
 
-package inbound
+package router
 
 import (
-	"errors"
+	"net/http"
 
-	"github.com/apache/synapse-go/internal/app/adapters/inbound/file"
-	"github.com/apache/synapse-go/internal/app/adapters/inbound/http"
-	"github.com/apache/synapse-go/internal/app/core/domain"
-	"github.com/apache/synapse-go/internal/app/core/ports"
+	"github.com/apache/synapse-go/internal/pkg/core/artifacts"
+	"github.com/rs/cors"
 )
 
-var (
-	ErrInboundTypeNotFound = errors.New("inbound type not found")
-)
-
-func NewInbound(config domain.InboundConfig) (ports.InboundEndpoint, error) {
-	switch config.Protocol {
-	case "file":
-		return file.NewFileInboundEndpoint(
-			config,
-			nil,
-		), nil
-
-	case "http":
-		return http.NewHTTPInboundEndpoint(
-			config,
-			nil,
-		), nil
-	default:
-		return nil, ErrInboundTypeNotFound
+// CORSMiddleware applies CORS headers based on the provided configuration using rs/cors package
+func CORSMiddleware(handler http.Handler, config artifacts.CORSConfig) http.Handler {
+	// Skip CORS handling if disabled
+	if !config.Enabled {
+		return handler
 	}
+
+	// Convert our config to rs/cors options
+	options := cors.Options{
+		AllowedOrigins:   config.AllowOrigins,
+		AllowedMethods:   config.AllowMethods,
+		AllowedHeaders:   config.AllowHeaders,
+		ExposedHeaders:   config.ExposeHeaders,
+		AllowCredentials: config.AllowCredentials,
+		MaxAge:           config.MaxAge,
+	}
+
+	// Create the cors handler
+	corsHandler := cors.New(options)
+
+	// Use the handler as middleware
+	return corsHandler.Handler(handler)
 }

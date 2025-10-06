@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <api name="HealthcareAPI" context="/healthcare/{version}/services" version="1.0" version-type="context" xmlns="http://ws.apache.org/ns/synapse">
+    <cors enabled="true"
+        allow-origins="https://example.com,https://app.example.com"
+        allow-methods="GET,POST,PUT,DELETE,PATCH,OPTIONS"
+        allow-headers="Content-Type,Authorization,X-Requested-With,Accept"
+        expose-headers="X-Request-ID,X-Response-Time"
+        allow-credentials="true"
+        max-age="3600" />
     <resource methods="GET" uri-template="/querydoctor_1/{category}?name={name}&amp;age={age}">
         <inSequence>
             <log category="INFO" logMessageID="false" logFullPayload="false" description="Request Log">

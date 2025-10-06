@@ -1,0 +1,57 @@
+site_name: Apache Synapse Go Developer Documentation
+site_description: Developer documentation for the Apache Synapse Go implementation
+site_author: Apache Software Foundation
+repo_url: https://github.com/apache/synapse-go
+
+theme:
+  name: material
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.expand
+    - navigation.sections
+    - navigation.indexes
+    - content.code.copy
+    - content.code.annotate
+  palette:
+    primary: indigo
+    accent: indigo
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - admonition
+  - pymdownx.details
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+  - attr_list
+  - md_in_html
+
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - Current Implementation Status: implementation-status.md
+  - Architecture:
+    - Hexagonal Architecture: architecture/hexagonal.md
+    - Application Lifecycle: architecture/lifecycle.md
+    - Context Flow: architecture/context-flow.md
+  - Core Components:
+    - Configuration: components/configuration.md
+    - Logging: components/logging.md
+    - Context Usage: components/context-usage.md
+    - File Inbound: components/file-inbound.md
+    - HTTP Inbound: components/http-inbound.md
+    - API & CORS: components/api-cors.md
+  - Contributing:
+    - Guidelines: contributing/guidelines.md
+    - Development Setup: contributing/setup.md
