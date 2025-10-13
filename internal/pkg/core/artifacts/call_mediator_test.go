@@ -193,7 +193,7 @@ func TestCallMediatorWithInvalidConfigContext(t *testing.T) {
 		ctx := context.WithValue(context.Background(), utils.ConfigContextKey, "not a ConfigContext")
 		result, err := mediator.Execute(msgContext, ctx)
 		assert.False(t, result)
-		assert.EqualError(t, err, "invalid config context type at test.hierarchy")
+		assert.EqualError(t, err, "invalid config context type")
 	})
 }
 

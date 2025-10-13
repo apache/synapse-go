@@ -12,7 +12,7 @@ CONFIG_DIR := $(RELEASE_DIR)/conf
 LDFLAGS := "-s -w"
 DEBUG_FLAGS := "-gcflags=all=-N -l"
 
-.PHONY: all deps build package clean test
+.PHONY: all deps build package clean test test-integration test-e2e test-all
 
 ## Default target: build + package
 all: deps build package
@@ -32,8 +32,20 @@ build-debug:
 	go build $(DEBUG_FLAGS) -o bin/$(PROJECT_NAME) $(MAIN_PACKAGE)
 
 test:
-	@echo "Running tests..."
-	go test -v ./...	
+	@echo "Running unit tests..."
+	go test -v ./...
+
+test-integration:
+	@echo "Running integration tests..."
+	go test -v -tags=integration ./...
+
+test-e2e:
+	@echo "Running end-to-end tests..."
+	go test -v -tags=e2e ./...
+
+test-all:
+	@echo "Running all tests (unit, integration, e2e)..."
+	go test -v -tags="integration,e2e" ./...
 
 ## Package the binary and folder structure into Synapse.zip
 package: build test
